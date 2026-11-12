@@ -1,0 +1,9 @@
+Technical*
+aurinko.txt
+*.log
+*.bak
+__pycache__/
+.idea/ 
+*.pdf
+*secret*
+macip.txt

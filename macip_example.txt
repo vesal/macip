@@ -1,0 +1,21 @@
+MAC | IP | Nimi | Oma nimi | Tila | Viimeksi nähty | Yhteys | Signaali | Tukiasema
+02:00:00:00:00:01 | 192.0.2.1 | router | Router | Online | 2026-11-12 10:30:00 |  |  | 
+02:00:00:00:00:02 | 192.0.2.10 | phone | Emma's phone | Online | 2026-11-12 10:30:00 | 5 GHz | -48 | Living room
+02:00:00:00:00:03 | 192.0.2.11 | phone | Alex's phone | Online | 2026-11-12 10:30:00 | 5 GHz | -56 | Living room
+02:00:00:00:00:04 | 192.0.2.12 | laptop | Work laptop | Online | 2026-11-12 10:30:00 | 5 GHz | -62 | Office
+02:00:00:00:00:05 | 192.0.2.13 | laptop | Family laptop | Offline | 2026-11-11 20:15:00 |  |  | 
+02:00:00:00:00:06 | 192.0.2.14 | tablet | Tablet | Online | 2026-11-12 10:30:00 | 2.4 GHz | -65 | Living room
+02:00:00:00:00:07 | 192.0.2.15 | desktop | Office computer | Online | 2026-11-12 10:30:00 |  |  | 
+02:00:00:00:00:08 | 192.0.2.16 | printer | Printer | Offline | 2026-11-10 14:25:00 |  |  | 
+02:00:00:00:00:09 | 192.0.2.17 | television | Living room TV | Online | 2026-11-12 10:30:00 | 5 GHz | -59 | Living room
+02:00:00:00:00:0A | 192.0.2.18 | media-player | Media player | Online | 2026-11-12 10:30:00 |  |  | 
+02:00:00:00:00:0B | 192.0.2.19 | game-console | Game console | Offline | 2026-11-11 22:00:00 |  |  | 
+02:00:00:00:00:0C | 192.0.2.20 | speaker | Kitchen speaker | Online | 2026-11-12 10:30:00 | 2.4 GHz | -67 | Kitchen
+02:00:00:00:00:0D | 192.0.2.21 | smart-light | Desk light | Online | 2026-11-12 10:30:00 | 2.4 GHz | -70 | Office
+02:00:00:00:00:0E | 192.0.2.22 | smart-plug | Reading lamp | Online | 2026-11-12 10:30:00 | 2.4 GHz | -61 | Living room
+02:00:00:00:00:0F | 192.0.2.23 | sensor | Temperature sensor | Offline | 2026-11-12 09:45:00 |  |  | 
+02:00:00:00:00:10 | 192.0.2.24 | camera | Garden camera | Online | 2026-11-12 10:30:00 | 2.4 GHz | -72 | Garden
+02:00:00:00:00:11 | 192.0.2.25 | server | Home server | Online | 2026-11-12 10:30:00 |  |  | 
+02:00:00:00:00:12 | 192.0.2.26 | storage | Network storage | Online | 2026-11-12 10:30:00 |  |  | 
+02:00:00:00:00:13 | 192.0.2.27 | watch | Smart watch | Offline | 2026-11-11 18:20:00 |  |  | 
+02:00:00:00:00:14 | 192.0.2.28 | access-point | Office access point | Online | 2026-11-12 10:30:00 |  |  | 
