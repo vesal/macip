@@ -91,7 +91,27 @@ Wi-Fi-taajuus, ei-tyhjä amesh_papMac ja negatiivinen RSSI. Muut rivien tiedot
 päivitetään kuten ennen. Ehdot ovat arvio, eivät varmistus: ASUSin tiedot voivat
 olla vanhentuneita. Myöhemmin suoritettava reititin voi korvata aiemman
 tukiaseman; esimerkiksi suorittamalla r3 ennen r2:ta r2:n osuma voittaa.
-Pelkkä ASUS-päivitys ei merkitse poistuneita laitteita offline-tilaan.
+Oletuksena ASUS merkitsee isOnline=1-laitteet onlineksi, mutta ei merkitse
+poistuneita laitteita offlineksi. Pelkkiä ASUS-reitittimiä käyttävä voi
+asetustiedostojen avulla arvioida tilat usean reitittimen havaintojen pohjalta:
+
+  set_offline=true
+  allow_online=true
+
+Aseta set_offline=true vain ensimmäisenä suoritettavan reitittimen
+secret-tiedostoon. Se alustaa kaikki olemassa olevat laitteet Offline-tilaan
+onnistuneen asiakaslistahaun jälkeen. allow_online=true (oletus) merkitsee
+isOnline=1-laitteet Online-tilaan riippumatta siitä, ovatko ne Wi-Fi:ssä vai
+langassa. Seuraavat reitittimet eivät kumoa aiempaa Online-havaintoa eivätkä
+muuta puuttuvien laitteiden tilaa. Asetuksella allow_online=false kyseinen
+reititin ei merkitse laitteita onlineksi; set_offline on oletuksena false.
+Virheellinen asetus pysäyttää kyseisen päivityksen.
+
+Tilat ovat arvioita: reitittimen tieto voi olla vanhentunut, ja ensimmäisen
+haun epäonnistuessa alustus jää tekemättä. Myöhemmän haun epäonnistuessa
+sen laitteet voivat jäädä virheellisesti offlineksi. Jos luotettavampi
+tilatietoja antava reititin ajetaan viimeiseksi, sen tulos voi korvata ASUSin
+arviot; esimerkiksi Huawei asettaa puuttuvat laitteet tilaan --.
 
 ASUS-skripti täyttää tyhjät Oma nimi -kentät reitittimen lempinimillä
 MAC-osoitteen perusteella myös olemassa oleville offline-laitteille.

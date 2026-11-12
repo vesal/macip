@@ -6,6 +6,17 @@ panel. The user interface and detailed setup guides are currently in Finnish.
 
 ![Local device inventory editor showing example data](screenshot1.jpg)
 
+## Router compatibility
+
+The router scripts have been tested with these models:
+
+- ASUS RT-AC66U_B1 and RT-AX53U
+- Huawei WA8021V5
+
+Other models and firmware versions may expose different interfaces and are not
+guaranteed to work. Supporting a different router may require a new script
+similar to `asus_mac.py` or `huawei_lan_inventory.py`.
+
 ## Features
 
 - Collect MAC and IP addresses, device names and status from configured routers.
@@ -23,6 +34,29 @@ synchronization is enabled by default and changes router settings. Set
 to the router. Importing names into empty local fields remains enabled.
 When routers have different names, the first imported name is retained.
 
+ASUS status reporting is approximate: `isOnline=1` is treated as an online
+observation even for devices connected by cable or through another access
+point. By default, `allow_online=true` marks these devices `Online` and
+`set_offline=false` leaves other statuses unchanged.
+
+For an ASUS-only setup, consider setting `set_offline=true` on the **first**
+ASUS in `update_commands` and leaving `allow_online=true` on each ASUS. The
+first successful update resets all existing statuses to `Offline`, then each
+router marks its online observations `Online`. An offline or missing device
+on a later router does not undo another router's online observation. Do not
+enable `set_offline` on later routers, as that would erase earlier results.
+
+These are estimates, not guaranteed current states: ASUS data can be stale.
+If the first router fails, statuses are not reset; if a later router fails,
+some devices can incorrectly remain offline. Set `allow_online=false` on a
+router if its online observations should not change inventory status.
+
+If another router provides more reliable status information for your network,
+run it last. For example, with the tested Huawei setup, leave ASUS
+`set_offline` at its default `false` and run Huawei last: it replaces the
+ASUS status estimates and marks devices absent from its list as `--`
+(unknown), not necessarily offline.
+
 ## Requirements
 
 - Python 3.10 or later and the `requests` package for router scripts.
@@ -38,10 +72,12 @@ python -m pip install requests
 
 ## Local setup
 
-1. Create a separate `key=value` configuration file for each router. Use
-   [huawei_config_example.txt](huawei_config_example.txt) as a starting point;
-   replace the example address and credentials with your own. The ASUS script
-   uses the same basic format. The `macip` setting must point to the same
+1. Create a separate `key=value` configuration file for each router.
+   [huawei_config_example.txt](huawei_config_example.txt) is a Huawei example;
+   replace the example address and credentials with your own. ASUS uses the
+   same basic setting format but may have additional ASUS-specific settings,
+   described in [macip_server_ohje.txt](macip_server_ohje.txt). The `macip`
+   setting must point to the same
    `macip.txt` in the project directory for every router.
 2. Edit [macip_server_config.json](macip_server_config.json) to list your
    router scripts and configuration files in the order they should run.

@@ -87,6 +87,58 @@ class AsusMacUpdateTests(unittest.TestCase):
                 self.update(clients)
             self.assertEqual(self.path.read_bytes(), original)
 
+    def test_reset_and_multiple_routers_combine_online_observations(self):
+        first = "00:00:00:00:00:01"
+        second = "00:00:00:00:00:02"
+        third = "00:00:00:00:00:03"
+        self.config.update(set_offline="true", allow_online="true")
+        rows = self.update({"maclist": [first], first: {
+            "isOnline": "1", "isWL": "0", "rssi": "0", "ip": "192.0.2.1",
+        }})
+        self.assertEqual([rows[mac]["Tila"] for mac in (first, second, third)],
+                         ["Online", "Offline", "Offline"])
+
+        self.config["set_offline"] = "false"
+        rows = self.update({"maclist": [first, second], first: {"isOnline": "0"},
+                            second: {"isOnline": "1", "ip": "192.0.2.2"}})
+        self.assertEqual([rows[mac]["Tila"] for mac in (first, second, third)],
+                         ["Online", "Online", "Offline"])
+
+    def test_allow_online_false_preserves_status_and_updates_other_fields(self):
+        mac = "00:00:00:00:00:03"
+        self.config["allow_online"] = "false"
+        rows = self.update({"maclist": [mac], mac: {
+            "isOnline": "1", "ip": "192.0.2.33",
+        }})
+        self.assertEqual(rows[mac]["Tila"], "Offline")
+        self.assertEqual(rows[mac]["IP"], "192.0.2.33")
+
+    def test_default_settings_preserve_existing_behavior(self):
+        mac = "00:00:00:00:00:03"
+        rows = self.update({"maclist": [mac], mac: {
+            "isOnline": "1", "ip": "192.0.2.3",
+        }})
+        self.assertEqual(rows[mac]["Tila"], "Online")
+        self.assertEqual(rows["00:00:00:00:00:02"]["Tila"], "Online")
+
+    def test_set_offline_without_allow_online(self):
+        self.config.update(set_offline="true", allow_online="false")
+        mac = "00:00:00:00:00:01"
+        rows = self.update({"maclist": [mac], mac: {
+            "isOnline": "1", "ip": "192.0.2.1",
+        }})
+        self.assertTrue(all(row["Tila"] == "Offline" for row in rows.values()))
+
+    def test_invalid_status_options_leave_file_unchanged(self):
+        original = self.path.read_bytes()
+        for option in ("set_offline", "allow_online"):
+            with self.subTest(option=option):
+                self.config[option] = "invalid"
+                with self.assertRaisesRegex(ValueError, option):
+                    self.update({"maclist": []})
+                self.assertEqual(self.path.read_bytes(), original)
+                del self.config[option]
+
     def test_invalid_signal_is_reported(self):
         mac = "00:00:00:00:00:01"
         clients = {"maclist": [mac], mac: {

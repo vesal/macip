@@ -405,6 +405,15 @@ def save_macip(path: Path, headers: list[str], rows: dict[str, dict[str, str]]) 
     print("\nMAC-tiedosto tallennettu:", path.resolve())
 
 
+def status_option(config: dict[str, str], name: str, default: bool) -> bool:
+    value = config.get(name, "true" if default else "false").strip().lower()
+    if value in ("true", "1", "yes", "on"):
+        return True
+    if value in ("false", "0", "no", "off"):
+        return False
+    raise ValueError(f"Virheellinen {name}-asetus.")
+
+
 def update_macip(clients: dict[str, Any], config: dict[str, str]) -> None:
     """Update active ASUS devices in the inventory file.
 
@@ -431,6 +440,8 @@ def update_macip(clients: dict[str, Any], config: dict[str, str]) -> None:
         isinstance(mac, str) for mac in maclist_value
     ):
         raise ValueError("ASUS palautti virheellisen tai puuttuvan maclist-listan.")
+    set_offline = status_option(config, "set_offline", False)
+    allow_online = status_option(config, "allow_online", True)
     maclist = set(maclist_value)
     router_nickname = config.get("router_nickname", "").strip()
     access_point = router_nickname or router_ip
@@ -442,6 +453,8 @@ def update_macip(clients: dict[str, Any], config: dict[str, str]) -> None:
     )
 
     for row in rows.values():
+        if set_offline:
+            row["Tila"] = "Offline"
         if row.get("Tukiasema", "") == access_point:
             row["Yhteys"] = ""
             row["Signaali"] = ""
@@ -503,7 +516,8 @@ def update_macip(clients: dict[str, Any], config: dict[str, str]) -> None:
             else:
                 ip_changes.append((mac, name, previous_ip, row["IP"]))
 
-        row["Tila"] = "Online"
+        if allow_online:
+            row["Tila"] = "Online"
         if update_last_seen:
             row["Viimeksi nähty"] = now
 
