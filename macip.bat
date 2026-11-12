@@ -4,9 +4,7 @@ cd /d "%~dp0"
 
 where py >nul 2>nul
 if not errorlevel 1 (
-    py -3 "%~dp0macip_local_server.py"
+    start "macip-editori" py -3 "%~dp0macip_local_server.py"
 ) else (
-    python "%~dp0macip_local_server.py"
+    start "macip-editori" python "%~dp0macip_local_server.py"
 )
-
-if errorlevel 1 pause

@@ -135,6 +135,7 @@ class AsusMacTests(unittest.TestCase):
                      patch.object(asus_mac, "login", return_value=session), \
                      patch.object(asus_mac, "get_client_list", return_value={"maclist": []}), \
                      patch.object(asus_mac, "update_macip", side_effect=error), \
+                     patch.object(asus_mac, "import_nicknames"), \
                      patch.object(asus_mac, "logout") as logout:
                     if error:
                         with self.assertRaises(SystemExit):
@@ -153,6 +154,7 @@ class AsusMacTests(unittest.TestCase):
              patch.object(asus_mac, "login", return_value=session), \
              patch.object(asus_mac, "get_client_list", return_value={"maclist": []}), \
              patch.object(asus_mac, "update_macip"), \
+             patch.object(asus_mac, "import_nicknames"), \
              patch.object(asus_mac, "logout", side_effect=requests.ConnectionError("logout failed")), \
              patch.object(asus_mac.sys, "stderr", stderr):
             with self.assertRaises(SystemExit):

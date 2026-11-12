@@ -25,7 +25,23 @@ FILTER_FILE = DIRECTORY / "macip_filter.js"
 INVENTORY_FILE = DIRECTORY / "macip.txt"
 CONFIG_FILE = DIRECTORY / "macip_server_config.json"
 MAX_REQUEST_SIZE = 2_000_000
+INITIAL_INVENTORY = (
+    "MAC | IP | Nimi | Oma nimi | Tila | Viimeksi nähty"
+    " | Yhteys | Signaali | Tukiasema\n"
+)
 inventory_lock = threading.Lock()
+
+
+def read_or_create_inventory() -> bytes:
+    try:
+        return INVENTORY_FILE.read_bytes()
+    except FileNotFoundError:
+        try:
+            with INVENTORY_FILE.open("x", encoding="utf-8", newline="\n") as inventory:
+                inventory.write(INITIAL_INVENTORY)
+        except FileExistsError:
+            pass
+        return INVENTORY_FILE.read_bytes()
 
 
 def revision(content: bytes) -> str:
@@ -177,7 +193,7 @@ class EditorHandler(BaseHTTPRequestHandler):
                 self.send_data(200, FILTER_FILE.read_bytes(), "text/javascript; charset=utf-8")
             elif request_path == "/api/macip":
                 with inventory_lock:
-                    content = INVENTORY_FILE.read_bytes()
+                    content = read_or_create_inventory()
                 self.send_json(200, {
                     "content": content.decode("utf-8-sig"),
                     "revision": revision(content),

@@ -88,6 +88,7 @@ class AsusMacArgumentsTests(unittest.TestCase):
              patch.object(asus_mac, "get_client_list", return_value=clients), \
              patch.object(asus_mac, "get_router_list") as wireless, \
              patch.object(asus_mac, "update_macip") as update, \
+             patch.object(asus_mac, "import_nicknames") as import_names, \
              patch.object(asus_mac, "sync_nicknames") as sync, \
              patch.object(asus_mac, "logout"), \
              redirect_stdout(output):
@@ -96,6 +97,7 @@ class AsusMacArgumentsTests(unittest.TestCase):
         self.assertNotIn("AA:BB:CC:DD:EE:FF", output.getvalue())
         wireless.assert_not_called()
         update.assert_called_once_with(clients, config)
+        import_names.assert_called_once()
         sync.assert_called_once()
 
     def test_patterns_match_all_clients_and_wireless_only_devices(self):

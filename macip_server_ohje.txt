@@ -1,7 +1,10 @@
 Paikallisen macip-editorin käyttö
 
-Käynnistä macip.bat. Pidä palvelimen ikkuna auki editorin käytön ajan.
+Käynnistä macip.bat. Palvelin avautuu omaan ikkunaansa; pidä se auki editorin
+käytön ajan ja lopeta palvelin näppäimillä Ctrl+C.
 Palvelin näyttää automaattisesti samassa kansiossa olevan macip.txt-tiedoston.
+Jos tiedosto puuttuu, palvelin luo sen otsikoineen editorin ladatessa listan.
+Olemassa olevaa tiedostoa ei korvata.
 Tallenna-painike kirjoittaa muutokset siihen. Jos tiedosto on muuttunut
 editorin lataamisen jälkeen, lataa se uudelleen ennen tallentamista.
 
@@ -13,6 +16,10 @@ Poista valitut poistaa myös suodatuksen piilottamat valinnat ja kertoo niistä
 vahvistuksessa. Lisäykset ja poistot kirjoitetaan tiedostoon vasta tallennettaessa.
 Taulukko täyttää ikkunan vapaan tilan, ja otsikko- ja suodatinrivit pysyvät
 näkyvissä taulukkoa vieritettäessä.
+
+Oma nimi -kentästä voi siirtyä seuraavan näkyvän rivin nimeen Enterillä,
+Tabilla tai alanuolella ja edelliseen ylänuolella tai Shift+Tabilla.
+Viimeiseltä nimikentältä Tab jatkaa muihin käyttöliittymän toimintoihin.
 
 Suodattimessa tavallinen teksti on kirjainkoosta riippumaton säännöllinen
 lauseke, esimerkiksi kissa|koira. Tyhjä suodatin näyttää kaikki rivit.
@@ -85,6 +92,12 @@ päivitetään kuten ennen. Ehdot ovat arvio, eivät varmistus: ASUSin tiedot vo
 olla vanhentuneita. Myöhemmin suoritettava reititin voi korvata aiemman
 tukiaseman; esimerkiksi suorittamalla r3 ennen r2:ta r2:n osuma voittaa.
 Pelkkä ASUS-päivitys ei merkitse poistuneita laitteita offline-tilaan.
+
+ASUS-skripti täyttää tyhjät Oma nimi -kentät reitittimen lempinimillä
+MAC-osoitteen perusteella myös olemassa oleville offline-laitteille.
+Olemassa olevia nimiä ei korvata eikä lempinimistä luoda uusia laiterivejä.
+Jos reitittimillä on eri nimet, ensimmäisenä löytynyt nimi jää käyttöön.
+Nimet tuodaan myös silloin, kun sync_nicknames=false.
 
 ASUS-skripti synkronoi oletuksena macip.txt:n ei-tyhjät Oma nimi -arvot
 reitittimen tuntemien laitteiden lempinimiksi MAC-osoitteen perusteella,

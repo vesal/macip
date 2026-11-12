@@ -1,4 +1,5 @@
 import io
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -90,6 +91,65 @@ class AsusNicknameTests(unittest.TestCase):
                 asus_mac.sync_nicknames(session, config, self.clients)
         session.post.assert_called_once()
 
+    def test_import_only_fills_empty_existing_rows(self):
+        raw = (f"<Reitittimen nimi>{self.mac}>0>0>>"
+               f"<Toinen>{self.other}>0>0>>"
+               "<Tuntematon>22:22:22:22:22:22>0>0>>")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "macip.txt"
+            path.write_text(
+                f"MAC | IP | Oma nimi\n{self.mac.lower()} | 192.0.2.1 | \n"
+                f"{self.other.lower()} | 192.0.2.2 | Oma nimi\n", encoding="utf-8"
+            )
+            config = {"macip": str(path), "sync_nicknames": "false"}
+            with patch.object(asus_mac, "get_custom_clientlist", return_value=raw), \
+                 redirect_stdout(io.StringIO()):
+                asus_mac.import_nicknames(MagicMock(), config)
+            rows = asus_mac.read_macip(path)[2]
+        self.assertEqual(rows[self.mac.lower()]["Oma nimi"], "Reitittimen nimi")
+        self.assertEqual(rows[self.other.lower()]["Oma nimi"], "Oma nimi")
+        self.assertEqual(len(rows), 2)
+
+    def test_import_rejects_invalid_name_without_saving(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "macip.txt"
+            content = f"MAC | IP | Oma nimi\n{self.mac} | 192.0.2.1 | \n"
+            path.write_bytes(content.encode("utf-8"))
+            raw = f"<Bad|name>{self.mac}>0>0>>"
+            with patch.object(asus_mac, "get_custom_clientlist", return_value=raw):
+                with self.assertRaises(ValueError):
+                    asus_mac.import_nicknames(MagicMock(), {"macip": str(path)})
+            self.assertEqual(path.read_bytes(), content.encode("utf-8"))
+
+    def test_import_skips_empty_and_placeholder_router_names(self):
+        for name in ("", " ", "--", "0"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "macip.txt"
+                content = f"MAC | IP | Oma nimi\n{self.mac} | 192.0.2.1 | \n"
+                path.write_bytes(content.encode("utf-8"))
+                with patch.object(asus_mac, "get_custom_clientlist",
+                                  return_value=f"<{name}>{self.mac}>0>0>>"), \
+                     redirect_stdout(io.StringIO()):
+                    asus_mac.import_nicknames(MagicMock(), {"macip": str(path)})
+                self.assertEqual(path.read_bytes(), content.encode("utf-8"))
+
+    def test_main_imports_after_update_when_router_sync_is_disabled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "macip.txt"
+            path.write_text(f"MAC | IP | Oma nimi\n{self.mac} | 192.0.2.1 | \n",
+                            encoding="utf-8")
+            config = {"ip": "192.0.2.1", "macip": str(path), "sync_nicknames": "false"}
+            with patch.object(asus_mac.sys, "argv", ["asus_mac.py", "config"]), \
+                 patch.object(asus_mac, "read_config", return_value=config), \
+                 patch.object(asus_mac, "login", return_value=MagicMock()), \
+                 patch.object(asus_mac, "get_client_list", return_value={"maclist": []}), \
+                 patch.object(asus_mac, "get_custom_clientlist", return_value=self.original), \
+                 patch.object(asus_mac, "sync_nicknames") as sync, \
+                 patch.object(asus_mac, "logout"), redirect_stdout(io.StringIO()):
+                asus_mac.main()
+            self.assertEqual(asus_mac.read_macip(path)[2][self.mac.lower()]["Oma nimi"], "Vanha")
+            sync.assert_not_called()
+
     def test_main_saves_before_sync_and_failure_is_reported(self):
         config = {"ip": "192.0.2.1"}
         session = MagicMock()
@@ -101,11 +161,13 @@ class AsusNicknameTests(unittest.TestCase):
              patch.object(asus_mac, "login", return_value=session), \
              patch.object(asus_mac, "get_client_list", return_value={"maclist": []}), \
              patch.object(asus_mac, "update_macip", order.update), \
+             patch.object(asus_mac, "import_nicknames", order.import_names), \
              patch.object(asus_mac, "sync_nicknames", order.sync), \
              patch.object(asus_mac, "logout") as logout, redirect_stdout(output):
             with self.assertRaises(SystemExit):
                 asus_mac.main()
         self.assertEqual(order.mock_calls, [call.update({"maclist": []}, config),
+                                            call.import_names(session, config),
                                             call.sync(session, config, {"maclist": []})])
         self.assertIn("sync failed", output.getvalue())
         logout.assert_called_once()
@@ -122,10 +184,15 @@ class AsusNicknameTests(unittest.TestCase):
                  patch.object(asus_mac, "get_client_list", return_value={"maclist": []}), \
                  patch.object(asus_mac, "get_router_list", return_value={}), \
                  patch.object(asus_mac, "update_macip"), \
+                 patch.object(asus_mac, "import_nicknames") as import_names, \
                  patch.object(asus_mac, "sync_nicknames") as sync, \
                  patch.object(asus_mac, "logout"), redirect_stdout(io.StringIO()):
                 asus_mac.main()
                 sync.assert_not_called()
+                if len(argv) == 2:
+                    import_names.assert_called_once()
+                else:
+                    import_names.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -118,5 +118,30 @@
     }
   }
 
-  globalThis.MacipFilter = {ComparatorFilter, ipv4Value};
+  function navigateOwnName(event) {
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+    let direction;
+    if (event.key === "Tab" || event.key === "Enter") {
+      direction = event.shiftKey ? -1 : 1;
+    } else if (!event.shiftKey && event.key === "ArrowDown") {
+      direction = 1;
+    } else if (!event.shiftKey && event.key === "ArrowUp") {
+      direction = -1;
+    } else {
+      return;
+    }
+
+    let row = event.currentTarget.closest("tr");
+    while (row) {
+      row = direction > 0 ? row.nextElementSibling : row.previousElementSibling;
+      const target = row?.querySelector("input.own-name:not(:disabled)");
+      if (target) {
+        event.preventDefault();
+        target.focus();
+        return;
+      }
+    }
+  }
+
+  globalThis.MacipFilter = {ComparatorFilter, ipv4Value, navigateOwnName};
 })();

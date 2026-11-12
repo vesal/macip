@@ -78,6 +78,43 @@ class LocalServerTests(unittest.TestCase):
         self.assertEqual(status, 409)
         self.assertEqual(self.inventory.read_text(encoding="utf-8"), changed)
 
+    def test_missing_inventory_is_created_and_can_be_saved(self):
+        self.inventory.unlink()
+        status, result = self.request("/api/macip")
+        self.assertEqual(status, 200)
+        self.assertEqual(result["content"], app.INITIAL_INVENTORY)
+        self.assertEqual(result["revision"], app.revision(self.inventory.read_bytes()))
+        app.validate_content(result["content"])
+        changed = result["content"] + "02:00:00:00:00:01 | 192.0.2.1 | laite | oma | Online |  |  |  | \n"
+        status, _ = self.request("/api/macip", {
+            "content": changed, "revision": result["revision"]
+        })
+        self.assertEqual(status, 200)
+        self.assertEqual(self.inventory.read_bytes(), changed.encode("utf-8"))
+
+    def test_creation_does_not_replace_concurrently_created_inventory(self):
+        self.inventory.unlink()
+        original_open = Path.open
+
+        def create_concurrently(path, mode="r", *args, **kwargs):
+            if mode == "x":
+                path.write_bytes(CONTENT.encode("utf-8"))
+            return original_open(path, mode, *args, **kwargs)
+
+        with patch.object(Path, "open", create_concurrently):
+            status, result = self.request("/api/macip")
+        self.assertEqual(status, 200)
+        self.assertEqual(result["content"], CONTENT)
+        self.assertEqual(self.inventory.read_bytes(), CONTENT.encode("utf-8"))
+
+    def test_creation_failure_is_reported(self):
+        self.inventory.unlink()
+        with patch.object(Path, "open", side_effect=PermissionError("access denied")):
+            status, result = self.request("/api/macip")
+        self.assertEqual(status, 500)
+        self.assertIn("access denied", result["error"])
+        self.assertFalse(self.inventory.exists())
+
     def test_reject_cross_origin_and_other_files(self):
         status, _ = self.request("/api/update", {}, origin=False)
         self.assertEqual(status, 403)

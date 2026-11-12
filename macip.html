@@ -282,7 +282,7 @@
       <tbody id="rows"></tbody>
     </table>
   </div>
-  <p class="hint">Valitse rivejä ensimmäisen sarakkeen ruuduilla. Otsikon ruutu valitsee näkyvät rivit ja suodatinrivin ruutu näyttää vain valitut. Poisto tallentuu vasta Tallenna-painikkeella. Lajittele klikkaamalla otsikkoa ja säädä leveyttä vetämällä otsikon oikeaa reunaa. Suodattimet tukevat regexiä ja vertailuja, esimerkiksi =arvo, !teksti ja &gt;2&lt;4. Lisätietoja käyttöohjeessa.</p>
+  <p class="hint">Valitse rivejä ensimmäisen sarakkeen ruuduilla. Otsikon ruutu valitsee näkyvät rivit ja suodatinrivin ruutu näyttää vain valitut. Poisto tallentuu vasta Tallenna-painikkeella. Oma nimi -kentästä voit siirtyä seuraavalle riville Enterillä, Tabilla tai nuolinäppäimillä ylös ja alas. Lajittele klikkaamalla otsikkoa ja säädä leveyttä vetämällä otsikon oikeaa reunaa. Suodattimet tukevat regexiä ja vertailuja, esimerkiksi =arvo, !teksti ja &gt;2&lt;4. Lisätietoja käyttöohjeessa.</p>
 </main>
 <dialog id="addDeviceDialog" aria-labelledby="addDeviceTitle">
   <form id="addDeviceForm" class="device-form">
@@ -759,9 +759,11 @@
         if (columnIndex === ownNameIndex) {
           const input = document.createElement("input");
           input.type = "text";
+          input.className = "own-name";
           input.value = value;
           input.disabled = busy;
           input.setAttribute("aria-label", `${values[0]}: oma nimi`);
+          input.addEventListener("keydown", globalThis.MacipFilter.navigateOwnName);
           input.addEventListener("input", () => {
             devices[originalIndex][ownNameIndex] = input.value;
             markDirty();

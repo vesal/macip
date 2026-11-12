@@ -209,9 +209,7 @@ def get_custom_clientlist(session: requests.Session, config: dict[str, str]) -> 
     return unquote(value, encoding="utf-8", errors="strict").replace("&#62", ">").replace("&#60", "<")
 
 
-def build_custom_clientlist(raw: str, clients: dict[str, Any],
-                            rows: dict[str, dict[str, str]]) -> tuple[str, int]:
-    """Merge inventory names into the router's complete nickname list."""
+def parse_custom_clientlist(raw: str) -> tuple[list[str], dict[str, int]]:
     mac_format = re.compile(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}", re.IGNORECASE)
     if raw and not raw.startswith("<"):
         raise ValueError("ASUSin custom_clientlist on odottamattomassa muodossa.")
@@ -225,7 +223,14 @@ def build_custom_clientlist(raw: str, clients: dict[str, Any],
         if mac in positions:
             raise ValueError(f"ASUSin custom_clientlist sisältää saman MAC-osoitteen kahdesti: {mac}")
         positions[mac] = index
+    return entries, positions
 
+
+def build_custom_clientlist(raw: str, clients: dict[str, Any],
+                            rows: dict[str, dict[str, str]]) -> tuple[str, int]:
+    """Merge inventory names into the router's complete nickname list."""
+    mac_format = re.compile(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}", re.IGNORECASE)
+    entries, positions = parse_custom_clientlist(raw)
     changes = 0
     for key, device in clients.items():
         if not mac_format.fullmatch(key) or not isinstance(device, dict):
@@ -251,6 +256,27 @@ def build_custom_clientlist(raw: str, clients: dict[str, Any],
             positions[mac] = len(entries) - 1
         changes += 1
     return "".join("<" + entry for entry in entries), changes
+
+
+def import_nicknames(session: requests.Session, config: dict[str, str]) -> None:
+    """Fill empty inventory names from the router without overwriting existing names."""
+    entries, positions = parse_custom_clientlist(get_custom_clientlist(session, config))
+    path, headers, rows = read_macip(config["macip"])
+    changes = 0
+    for mac, index in positions.items():
+        row = rows.get(mac)
+        if row is None or row.get("Oma nimi", "").strip():
+            continue
+        name = entries[index].split(">")[0].strip()
+        if not name or name in ("--", "0"):
+            continue
+        if "|" in name or any(ord(char) < 32 for char in name):
+            raise ValueError(f"ASUSin lempinimeä ei voi tallentaa laiteluetteloon ({mac}).")
+        row["Oma nimi"] = name
+        changes += 1
+    if changes:
+        save_macip(path, headers, rows)
+    print(f"ASUS-nimien tuonti: {changes} nimeä.")
 
 
 def sync_nicknames(session: requests.Session, config: dict[str, str],
@@ -538,6 +564,7 @@ def main() -> None:
                     )))
 
                     update_macip(clients, config)
+                    import_nicknames(session, config)
                     sync_setting = config.get("sync_nicknames", "true").strip().lower()
                     if sync_setting not in ("true", "1", "yes", "on", "false", "0", "no", "off"):
                         raise ValueError("Virheellinen sync_nicknames-asetus.")

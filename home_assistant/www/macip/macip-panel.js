@@ -118,6 +118,7 @@ class MacipPanel extends HTMLElement {
         </div>
         <p class="hint">Otsikon ruutu valitsee näkyvät rivit ja suodatinrivin ruutu näyttää vain valitut.
           Poisto tallentuu vasta Tallenna-painikkeella. Suodattimet tukevat regexiä ja vertailuja, kuten =arvo, !teksti ja &gt;2&lt;4.
+          Oma nimi -kentästä voi siirtyä seuraavalle riville Enterillä, Tabilla tai nuolinäppäimillä ylös ja alas.
           Lajittele otsikosta ja muuta sarakkeen leveyttä sen oikeasta reunasta.</p>
       </main>
       <dialog id="add-dialog" aria-labelledby="add-title">
@@ -544,8 +545,10 @@ class MacipPanel extends HTMLElement {
         if (columnIndex === ownNameIndex) {
           const input = document.createElement("input");
           input.type = "text";
+          input.className = "own-name";
           input.value = value;
           input.setAttribute("aria-label", `${values[0]}: oma nimi`);
+          input.addEventListener("keydown", globalThis.MacipFilter.navigateOwnName);
           input.addEventListener("input", () => {
             this._devices[originalIndex][ownNameIndex] = input.value;
             this._dirty = true;
